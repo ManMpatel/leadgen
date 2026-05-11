@@ -33,9 +33,27 @@ router.post('/search', async (req, res) => {
     const { query } = req.body as { query: string };
     if (!query) return res.status(400).json({ error: 'query is required' });
 
-    const prompt = `Search for real businesses matching: "${query}" in Sydney, Australia.
+   const prompt = `Search for SMALL-TO-MID-SIZED businesses matching: "${query}" in Sydney, Australia.
 
-Find 10-15 actual businesses. Return ONLY a valid JSON array, no markdown, no explanation:
+TARGET PROFILE — only return businesses that fit ALL of these:
+- Family-owned, owner-operated, or founder-led
+- Estimated 5–50 employees, $1M–$10M annual revenue
+- Single location (one warehouse / one office)
+- The owner or operations manager personally makes buying decisions
+
+EXCLUDE — do NOT return any business that has ANY of these signals:
+- Name contains: "Holdings", "Group", "International", "Global", "Australia-wide"
+- Phone number starts with 1300 or 1800
+- Address contains: "Level", "Tower", or is in Sydney CBD / North Sydney / Parramatta CBD
+- Description contains: "leading provider", "Australia's largest", "multinational", "ASX-listed", "global supply chain"
+- Multiple offices, interstate presence, or international operations
+
+PREFER — businesses in these areas score higher:
+- Western Sydney industrial suburbs: Smithfield, Wetherill Park, Blacktown, Penrith, Eastern Creek, Moorebank, Prestons, Ingleburn, Smeaton Grange, Erskine Park, Seven Hills, Girraween, Minchinbury
+- Mobile numbers (04xx) or single Sydney landlines (02 xxxx xxxx)
+- "Established 19XX", "family business", "owner-operated" in description
+
+Find 10–15 businesses matching the target profile. Return ONLY a valid JSON array, no markdown, no explanation:
 [
   {
     "name": "Business Name Pty Ltd",
@@ -44,9 +62,12 @@ Find 10-15 actual businesses. Return ONLY a valid JSON array, no markdown, no ex
     "email": "info@business.com.au",
     "address": "123 Street, Suburb NSW 2000",
     "website": "www.business.com.au or none",
+    "estimatedSize": "small",
     "notes": "One sentence about what they do"
   }
 ]
+
+estimatedSize must be one of: "micro" (<5 staff), "small" (5–20), "mid" (20–50). Skip any business that looks "large" (50+ staff). If you can't tell the size with confidence, skip it.
 
 Focus on real phone numbers and emails. If email not found put "not found". If website not found put "none".`;
 

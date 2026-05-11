@@ -75,18 +75,32 @@ export default function InterestedTab() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const markEmailSent = async () => {
-    if (!selected) return;
-    const followUpDueAt = new Date(Date.now() + 3 * 86_400_000).toISOString();
-    try {
-      await api.leads.update(selected._id, { status: "email-sent", followUpDueAt });
-      setLeads(prev => prev.filter(l => l._id !== selected._id));
-      setSelected(null);
-      setEmail("");
-    } catch (e: unknown) {
-      setError(String(e));
-    }
-  };
+  const openMailto = () => {
+  if (!selected || !email) return;
+  const subject = encodeURIComponent(`Custom Software for ${selected.name} – $99/month`);
+  const body = encodeURIComponent(email);
+  const to = encodeURIComponent(selected.email ?? "");
+  window.open(`mailto:${to}?subject=${subject}&body=${body}`);
+};
+
+const markEmailSent = async () => {
+  if (!selected) return;
+  // 2 days from now at 6:00am Sydney time
+  const followUpDate = new Date();
+  followUpDate.setDate(followUpDate.getDate() + 2);
+  followUpDate.setHours(6, 0, 0, 0);
+  try {
+    await api.leads.update(selected._id, {
+      status: "email-sent",
+      followUpDueAt: followUpDate.toISOString(),
+    });
+    setLeads(prev => prev.filter(l => l._id !== selected._id));
+    setSelected(null);
+    setEmail("");
+  } catch (e: unknown) {
+    setError(String(e));
+  }
+};
 
   if (loading) return <div className="text-center py-16 text-gray-400 text-sm">Loading...</div>;
 

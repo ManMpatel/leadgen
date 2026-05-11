@@ -3,13 +3,18 @@ import { api } from "../api";
 import type { Lead, Search } from "../types";
 
 const QUICK_SEARCHES = [
-  "warehouse Sydney",
-  "logistics company Parramatta",
-  "storage facility Western Sydney",
-  "freight company Sydney",
-  "cold storage NSW",
-  "manufacturing company Blacktown",
+  "wholesalers Wetherill Park NSW",
+  "importers Smithfield NSW",
+  "distributors Bankstown NSW",
+  "suppliers Villawood NSW",
+  "wholesaler Ingleburn NSW",
+  "distributor Minto NSW",
+  "warehouse St Marys NSW",
+  "wholesaler Arndell Park NSW",
 ];
+
+const CACHE_KEY = "leadgen_search_cache";
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 export default function SearchTab() {
   const [query, setQuery] = useState("warehouse logistics Sydney");
@@ -17,6 +22,7 @@ export default function SearchTab() {
   const [bulkLoading, setBulkLoading] = useState(false);
   const [results, setResults] = useState<Partial<Lead>[]>([]);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+  const [addedNames, setAddedNames] = useState<Set<string>>(new Set());
   const [error, setError] = useState("");
   const [log, setLog] = useState("");
   const [searches, setSearches] = useState<Search[]>([]);
@@ -26,11 +32,52 @@ export default function SearchTab() {
     api.searches.list().then(setSearches).catch(() => {});
   }, []);
 
+  // Restore last search results from localStorage on mount (24h TTL)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (!raw) return;
+      const cached = JSON.parse(raw) as {
+        query: string;
+        results: Partial<Lead>[];
+        addedIds: string[];
+        savedAt: number;
+      };
+      if (Date.now() - cached.savedAt > CACHE_TTL_MS) {
+        localStorage.removeItem(CACHE_KEY);
+        return;
+      }
+      setQuery(cached.query);
+      setResults(cached.results);
+      setAddedIds(new Set(cached.addedIds));
+      const minsAgo = Math.round((Date.now() - cached.savedAt) / 60000);
+      setLog(`Restored ${cached.results.length} results from ${minsAgo} min ago`);
+    } catch {
+      localStorage.removeItem(CACHE_KEY);
+    }
+  }, []);
+
+  // Save results to localStorage whenever they change
+  useEffect(() => {
+    if (results.length === 0) return;
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
+        query,
+        results,
+        addedIds: Array.from(addedIds),
+        savedAt: Date.now(),
+      }));
+    } catch {
+      // localStorage full or unavailable
+    }
+  }, [results, query, addedIds]);
+
   const runSearch = async (q: string) => {
     setLoading(true);
     setError("");
     setResults([]);
     setAddedIds(new Set());
+    setAddedNames(new Set());
     setLog("Searching with Gemini...");
     try {
       const { leads } = await api.gemini.search(q);
@@ -48,6 +95,11 @@ export default function SearchTab() {
       setAddedIds(prev => {
         const next = new Set(prev);
         result.leadIds.forEach(id => next.add(id));
+        return next;
+      });
+      setAddedNames(prev => {
+        const next = new Set(prev);
+        next.add(biz.name || "");
         return next;
       });
       const savedSearch = await api.searches.create({
@@ -112,7 +164,7 @@ export default function SearchTab() {
   };
 
   const isAdded = (biz: Partial<Lead>) =>
-    addedIds.size > 0 && results.indexOf(biz) < addedIds.size;
+    addedNames.has(biz.name || "");
 
   return (
     <div>

@@ -123,13 +123,7 @@ export default function DashboardTab({ onNavigate }: Props) {
                 </div>
               </div>
             ))}
-          </div>
-          <button
-            onClick={() => onNavigate("Calls")}
-            className="mt-2 text-xs text-blue-600 hover:underline"
-          >
-            Open Calls tab →
-          </button>
+         </div>
         </section>
       )}
 
@@ -169,6 +163,17 @@ export default function DashboardTab({ onNavigate }: Props) {
                       className="mt-1 text-xs text-blue-600 hover:underline"
                     >
                       Copy to clipboard
+                    </button>
+                    <button
+                      onClick={() => {
+                        const subject = encodeURIComponent(`Following up – ${lead.name}`);
+                        const body = encodeURIComponent(followUpEmails[lead._id] ?? "");
+                        const to = encodeURIComponent(lead.email ?? "");
+                        window.open(`mailto:${to}?subject=${subject}&body=${body}`);
+                      }}
+                      className="mt-1 ml-3 text-xs text-green-600 hover:underline"
+                    >
+                      📧 Open in Mail
                     </button>
                   </div>
                 )}

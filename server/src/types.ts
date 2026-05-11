@@ -33,6 +33,7 @@ export interface Lead {
   possibleDuplicateOf?: ObjectId;
   unsubscribed: boolean;
   followUpDueAt?: Date;
+  leadNumber?: number;
 }
 
 export interface Search {

@@ -28,6 +28,7 @@ export default function PipelineTab({ onDraftEmail }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filterStatus, setFilterStatus] = useState<LeadStatus | "all">("all");
+  const [search, setSearch] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -95,12 +96,32 @@ export default function PipelineTab({ onDraftEmail }: Props) {
           No leads yet. Search for businesses and add them.
         </div>
       ) : (
-        <div className="space-y-2">
-          {leads.map(lead => (
+        <div className="space-y-6">
+          {Object.entries(
+            leads.reduce((groups, lead) => {
+              const date = lead.addedAt
+                ? new Date(lead.addedAt).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })
+                : "Unknown date";
+              if (!groups[date]) groups[date] = [];
+              groups[date].push(lead);
+              return groups;
+            }, {} as Record<string, typeof leads>)
+          ).map(([date, group]) => (
+            <div key={date}>
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 px-1">{date}</h3>
+              <div className="space-y-2">
+          {group.filter(l =>
+            search === "" ||
+            String(l.leadNumber).includes(search.replace("#","")) ||
+            l.name.toLowerCase().includes(search.toLowerCase())
+          ).map(lead => (
             <div key={lead._id} className="bg-white border border-gray-200 rounded-lg p-4">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    {lead.leadNumber && (
+                      <span className="text-xs font-mono text-gray-400">#{lead.leadNumber}</span>
+                    )}
                     <span className="font-medium text-gray-900">{lead.name}</span>
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full ${STATUS_COLORS[lead.status].bg} ${STATUS_COLORS[lead.status].text}`}
@@ -147,6 +168,9 @@ export default function PipelineTab({ onDraftEmail }: Props) {
                     </button>
                   )}
                 </div>
+              </div>
+            </div>
+          ))}
               </div>
             </div>
           ))}

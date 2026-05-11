@@ -76,31 +76,30 @@ export default function InterestedTab() {
   };
 
   const openMailto = () => {
-  if (!selected || !email) return;
-  const subject = encodeURIComponent(`Custom Software for ${selected.name} – $99/month`);
-  const body = encodeURIComponent(email);
-  const to = encodeURIComponent(selected.email ?? "");
-  window.open(`mailto:${to}?subject=${subject}&body=${body}`);
-};
+    if (!selected || !email) return;
+    const subject = encodeURIComponent(`Custom Software for ${selected.name} – $99/month`);
+    const body = encodeURIComponent(email);
+    const to = encodeURIComponent(selected.email ?? "");
+    window.open(`mailto:${to}?subject=${subject}&body=${body}`);
+  };
 
-const markEmailSent = async () => {
-  if (!selected) return;
-  // 2 days from now at 6:00am Sydney time
-  const followUpDate = new Date();
-  followUpDate.setDate(followUpDate.getDate() + 2);
-  followUpDate.setHours(6, 0, 0, 0);
-  try {
-    await api.leads.update(selected._id, {
-      status: "email-sent",
-      followUpDueAt: followUpDate.toISOString(),
-    });
-    setLeads(prev => prev.filter(l => l._id !== selected._id));
-    setSelected(null);
-    setEmail("");
-  } catch (e: unknown) {
-    setError(String(e));
-  }
-};
+  const markEmailSent = async () => {
+    if (!selected) return;
+    const followUpDate = new Date();
+    followUpDate.setDate(followUpDate.getDate() + 2);
+    followUpDate.setHours(6, 0, 0, 0);
+    try {
+      await api.leads.update(selected._id, {
+        status: "email-sent",
+        followUpDueAt: followUpDate.toISOString(),
+      });
+      setLeads(prev => prev.filter(l => l._id !== selected._id));
+      setSelected(null);
+      setEmail("");
+    } catch (e: unknown) {
+      setError(String(e));
+    }
+  };
 
   if (loading) return <div className="text-center py-16 text-gray-400 text-sm">Loading...</div>;
 
@@ -188,10 +187,10 @@ const markEmailSent = async () => {
           />
           <div className="flex gap-2 mt-3 flex-wrap">
             <button
-              onClick={markEmailSent}
+              onClick={async () => { openMailto(); await markEmailSent(); }}
               className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
             >
-              Email sent — set follow-up reminder ✓
+              📧 Open in Mail & Start 2-Day Timer
             </button>
             <button
               onClick={generateEmail}

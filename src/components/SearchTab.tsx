@@ -97,6 +97,7 @@ export default function SearchTab() {
         result.leadIds.forEach(id => next.add(id));
         return next;
       });
+      setResults(prev => prev.filter(b => b.name !== biz.name));
       setAddedNames(prev => {
         const next = new Set(prev);
         next.add(biz.name || "");

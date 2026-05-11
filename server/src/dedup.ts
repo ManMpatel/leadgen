@@ -97,6 +97,7 @@ export async function upsertLead(raw: RawLead): Promise<UpsertResult> {
     filter,
     {
       $setOnInsert: {
+        leadNumber: (await coll.countDocuments()) + 1,
         name: raw.name,
         nameNormalized: nameNorm,
         type: raw.type,

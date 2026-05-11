@@ -31,6 +31,7 @@ export interface Lead {
   possibleDuplicateOf?: string;
   unsubscribed: boolean;
   followUpDueAt?: string;
+  leadNumber?: number;
 }
 
 export interface Search {

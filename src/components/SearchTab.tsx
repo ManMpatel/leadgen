@@ -202,22 +202,7 @@ export default function SearchTab() {
         </button>
       </div>
 
-      <div className="flex items-center gap-2 mb-3 flex-wrap">
-        <span className="text-xs text-gray-500 font-medium">Leads:</span>
-        {[1, 3, 5, 10, 20].map(n => (
-          <button
-            key={n}
-            onClick={() => setLeadCount(n)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-              leadCount === n
-                ? "bg-blue-600 text-white border-blue-600"
-                : "bg-white text-gray-600 border-gray-200 hover:border-blue-400"
-            }`}
-          >
-            {n}
-          </button>
-        ))}
-      </div>
+
 
       <div className="flex gap-2 mb-3 flex-wrap items-center">
         <span className="text-xs text-gray-500 font-medium">Industry:</span>
@@ -236,23 +221,6 @@ export default function SearchTab() {
             }`}
           >
             {label}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex gap-2 mb-3 flex-wrap items-center">
-        <span className="text-xs text-gray-500 font-medium">Leads:</span>
-        {[1, 3, 5, 10, 20].map(n => (
-          <button
-            key={n}
-            onClick={() => setLeadCount(n)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-              leadCount === n
-                ? "bg-blue-600 text-white border-blue-600"
-                : "bg-white text-gray-600 border-gray-200 hover:border-blue-400"
-            }`}
-          >
-            {n}
           </button>
         ))}
       </div>

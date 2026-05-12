@@ -6,6 +6,7 @@ export type LeadStatus =
   | 'interested'
   | 'email-sent'
   | 'closed-won'
+  | 'follow-up-sent'
   | 'not-interested';
 
 export type SubscriberStatus = 'active' | 'paused' | 'churned';

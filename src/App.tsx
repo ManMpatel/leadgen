@@ -3,10 +3,12 @@ import DashboardTab from "./components/DashboardTab";
 import SearchTab from "./components/SearchTab";
 import PipelineTab from "./components/PipelineTab";
 import CallsTab from "./components/CallsTab";
+import EmailedTab from "./components/EmailedTab";
+import FollowUpTab from "./components/FollowUpTab";
 import InterestedTab from "./components/InterestedTab";
 import SuccessTab from "./components/SuccessTab";
 
-const TABS = ["Dashboard", "Search", "Pipeline", "Calls", "Interested", "Success"] as const;
+const TABS = ["Dashboard", "Search", "Pipeline", "Emailed", "Follow Up", "Calls", "Interested", "Success"] as const;
 type Tab = typeof TABS[number];
 
 export default function App() {
@@ -51,6 +53,8 @@ export default function App() {
         {tab === "Pipeline" && (
           <PipelineTab onDraftEmail={() => goToTab("Interested")} />
         )}
+        {tab === "Emailed" && <EmailedTab />}
+        {tab === "Follow Up" && <FollowUpTab />}
         {tab === "Calls" && <CallsTab />}
         {tab === "Interested" && <InterestedTab />}
         {tab === "Success" && <SuccessTab />}

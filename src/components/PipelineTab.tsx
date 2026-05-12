@@ -12,6 +12,7 @@ const STATUS_COLORS: Record<LeadStatus, { bg: string; text: string; label: strin
   interested: { bg: "bg-green-100", text: "text-green-700", label: "Interested" },
   "email-sent": { bg: "bg-purple-100", text: "text-purple-700", label: "Email Sent" },
   "closed-won": { bg: "bg-teal-100", text: "text-teal-700", label: "Closed Won" },
+  "follow-up-sent": { bg: "bg-orange-100", text: "text-orange-700", label: "Follow-Up Sent" },
   "not-interested": { bg: "bg-gray-100", text: "text-gray-500", label: "Not Interested" },
 };
 

@@ -99,7 +99,10 @@ ${jsonFormat}`,
     const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
     const start = cleaned.indexOf('[');
     const end = cleaned.lastIndexOf(']');
-    if (start === -1) return res.status(422).json({ error: 'Could not parse Gemini response', raw: text });
+    if (start === -1 || end === -1) {
+      console.error('Gemini raw response:', text);
+      return res.status(422).json({ error: 'Gemini did not return JSON. Raw: ' + text.slice(0, 300) });
+    }
 
     const leads = JSON.parse(cleaned.slice(start, end + 1));
     res.json({ leads, text });

@@ -13,6 +13,19 @@ const QUICK_SEARCHES = [
   "wholesaler Arndell Park NSW",
 ];
 
+const SYDNEY_SUBURBS = [
+  "Wetherill Park", "Smithfield", "Bankstown", "Villawood", "Ingleburn",
+  "Minto", "St Marys", "Arndell Park", "Parramatta", "Prestons",
+  "Moorebank", "Liverpool", "Chullora", "Greenacre", "Campbelltown",
+  "Smeaton Grange", "Narellan", "Seven Hills", "Blacktown", "Eastern Creek",
+  "Rydalmere", "Auburn", "Lidcombe", "Alexandria", "Botany",
+];
+
+function extractSuburb(query: string): string {
+  const found = SYDNEY_SUBURBS.find(s => query.toLowerCase().includes(s.toLowerCase()));
+  return found ?? "";
+}
+
 const CACHE_KEY = "leadgen_search_cache";
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -27,6 +40,9 @@ export default function SearchTab() {
   const [log, setLog] = useState("");
   const [searches, setSearches] = useState<Search[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [industry, setIndustry] = useState<'car-rental' | 'cabinet-maker' | 'warehouse'>('warehouse');
+  const [leadCount, setLeadCount] = useState(10);
+  const [selectedSuburb, setSelectedSuburb] = useState("");
 
   useEffect(() => {
     api.searches.list().then(setSearches).catch(() => {});
@@ -80,7 +96,7 @@ export default function SearchTab() {
     setAddedNames(new Set());
     setLog("Searching with Gemini...");
     try {
-      const { leads } = await api.gemini.search(q);
+      const { leads } = await api.gemini.search(q, leadCount);
       setResults(leads);
       setLog(`Found ${leads.length} businesses`);
     } catch (e: unknown) {
@@ -126,7 +142,7 @@ export default function SearchTab() {
     const uniqueQueries = [...new Set(searches.map(s => s.query))];
     for (const q of uniqueQueries.slice(0, 6)) {
       try {
-        const { leads } = await api.gemini.search(q);
+        const { leads } = await api.gemini.search(q, leadCount, industry);
         allLeads.push(...leads.map(l => ({ ...l, sourceQuery: q })));
       } catch {
         // skip failed searches
@@ -186,6 +202,61 @@ export default function SearchTab() {
         </button>
       </div>
 
+      <div className="flex items-center gap-2 mb-3 flex-wrap">
+        <span className="text-xs text-gray-500 font-medium">Leads:</span>
+        {[1, 3, 5, 10, 20].map(n => (
+          <button
+            key={n}
+            onClick={() => setLeadCount(n)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+              leadCount === n
+                ? "bg-blue-600 text-white border-blue-600"
+                : "bg-white text-gray-600 border-gray-200 hover:border-blue-400"
+            }`}
+          >
+            {n}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex gap-2 mb-3 flex-wrap items-center">
+        <span className="text-xs text-gray-500 font-medium">Industry:</span>
+        {([
+          { id: 'car-rental', label: '🚗 Car Rental' },
+          { id: 'cabinet-maker', label: '🪚 Cabinet Maker' },
+          { id: 'warehouse', label: '📦 Warehouse' },
+        ] as const).map(({ id, label }) => (
+          <button
+            key={id}
+            onClick={() => setIndustry(id)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+              industry === id
+                ? "bg-gray-900 text-white border-gray-900"
+                : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex gap-2 mb-3 flex-wrap items-center">
+        <span className="text-xs text-gray-500 font-medium">Leads:</span>
+        {[1, 3, 5, 10, 20].map(n => (
+          <button
+            key={n}
+            onClick={() => setLeadCount(n)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+              leadCount === n
+                ? "bg-blue-600 text-white border-blue-600"
+                : "bg-white text-gray-600 border-gray-200 hover:border-blue-400"
+            }`}
+          >
+            {n}
+          </button>
+        ))}
+      </div>
+
       <div className="flex gap-2 mb-3 flex-wrap">
         <button
           onClick={generateTodaysLeads}
@@ -225,7 +296,105 @@ export default function SearchTab() {
         </div>
       </div>
 
-      <div className="flex gap-2 flex-wrap mb-4">
+      {/* Suburb picker */}
+<div className="mb-4">
+  <div className="flex items-center gap-2 mb-2">
+    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">📍 Suburb</span>
+    {selectedSuburb && (
+      <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-medium">
+        {selectedSuburb}
+        <button
+          onClick={() => { setSelectedSuburb(""); setQuery(q => q.replace(/ NSW.*/, "").trim()); }}
+          className="ml-1 text-blue-400 hover:text-blue-700"
+        >✕</button>
+      </span>
+    )}
+  </div>
+  <div className="flex gap-1.5 flex-wrap">
+    {SYDNEY_SUBURBS.map(s => (
+      <button
+        key={s}
+        onClick={() => {
+          setSelectedSuburb(s);
+          setQuery(`warehouse logistics ${s} NSW`);
+        }}
+        className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+          selectedSuburb === s
+            ? "bg-blue-600 text-white border-blue-600"
+            : "bg-white text-gray-600 border-gray-200 hover:border-blue-400 hover:text-blue-600"
+        }`}
+      >
+        {s}
+      </button>
+    ))}
+  </div>
+</div>
+
+{/* Suburb stats from history */}
+{searches.length > 0 && (() => {
+  const stats = searches.reduce((acc, s) => {
+    const sub = extractSuburb(s.query);
+    if (!sub) return acc;
+    if (!acc[sub]) acc[sub] = { searches: 0, leads: 0, last: s.runAt };
+    acc[sub].searches++;
+    acc[sub].leads += s.resultCount ?? 0;
+    if (new Date(s.runAt) > new Date(acc[sub].last)) acc[sub].last = s.runAt;
+    return acc;
+  }, {} as Record<string, { searches: number; leads: number; last: string }>);
+
+  const rows = Object.entries(stats).sort((a, b) => b[1].leads - a[1].leads);
+  const untouched = SYDNEY_SUBURBS.filter(s => !stats[s]).slice(0, 6);
+
+  if (rows.length === 0) return null;
+  return (
+    <div className="mb-4 bg-white border border-gray-200 rounded-lg p-3">
+      <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">📊 Suburb Activity</div>
+      <div className="flex flex-wrap gap-2 mb-3">
+        {rows.map(([sub, data]) => (
+          <button
+            key={sub}
+            onClick={() => { setSelectedSuburb(sub); setQuery(`warehouse logistics ${sub} NSW`); }}
+            className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 hover:border-blue-400 hover:bg-blue-50 transition-colors"
+          >
+            <span className="text-xs font-medium text-gray-700">📍 {sub}</span>
+            <span className="text-xs text-blue-600 font-bold">{data.leads}</span>
+            <span className="text-xs text-gray-400">leads · {data.searches}x</span>
+            {data.leads > 3 && <span className="text-xs">🔥</span>}
+          </button>
+        ))}
+      </div>
+      {untouched.length > 0 && (
+        <>
+          <div className="text-xs font-medium text-gray-400 mb-1.5">🎯 Never searched yet:</div>
+          <div className="flex flex-wrap gap-1.5">
+            {untouched.map(s => (
+              <button
+                key={s}
+                onClick={() => { setSelectedSuburb(s); setQuery(`warehouse logistics ${s} NSW`); }}
+                className="text-xs px-2 py-1 border border-dashed border-gray-300 rounded-full text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+})()}
+
+{/* Original quick searches */}
+<div className="flex gap-2 flex-wrap mb-4">
+  {QUICK_SEARCHES.map(q => (
+    <button
+      key={q}
+      onClick={() => setQuery(q)}
+      className="px-3 py-1 bg-white border border-gray-200 rounded-full text-xs text-gray-600 hover:border-blue-400 hover:text-blue-600"
+    >
+      {q}
+    </button>
+  ))}
+
         {QUICK_SEARCHES.map(q => (
           <button
             key={q}
@@ -235,7 +404,9 @@ export default function SearchTab() {
             {q}
           </button>
         ))}
+        
       </div>
+      
 
       {error && <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm mb-3">{error}</div>}
       {log && !error && <div className="text-xs text-gray-400 mb-3">{log}</div>}

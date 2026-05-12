@@ -51,10 +51,10 @@ export const api = {
       }),
   },
   gemini: {
-    search: (query: string) =>
+    search: (query: string, count = 10, industry = 'warehouse') =>
       req<{ leads: Partial<Lead>[]; text: string }>('/api/gemini/search', {
         method: 'POST',
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ query, count, industry }),
       }),
     email: (data: {
       leadId: string;

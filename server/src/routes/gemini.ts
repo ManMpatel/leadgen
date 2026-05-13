@@ -46,10 +46,13 @@ router.post('/search', async (req, res) => {
     "notes": "One sentence about what they do"
   }
 ]
-estimatedSize: "micro" (<5 staff), "small" (5–20), "mid" (20–50). If email not found put "not found". If website not found put "none".`;
+estimatedSize: "micro" (<5 staff), "small" (5–20), "mid" (20–50). If email not found put "not found". If website not found put "none".
+IMPORTANT: Always return a valid JSON array. Never explain or refuse — return whatever you find, even if fewer results or empty [].`;
+
+    const fallback = `\nIMPORTANT: Always return a valid JSON array. If you cannot find enough matching businesses, return whatever you can find. Never explain or refuse — just return the JSON array, even if it has fewer items or is empty [].`;
 
     const prompts: Record<string, string> = {
-      'car-rental': `Search for exactly ${count} small owner-operated car rental businesses in Sydney Australia matching: "${query}".
+      'car-rental': `Search for up to ${count} small owner-operated car rental businesses in Sydney Australia matching: "${query}".
 
 TARGET — all must be true:
 - Independent car/van/ute rental (NOT Budget, Hertz, Avis, Europcar, Thrifty, GoGet, Car Next Door)
@@ -62,7 +65,7 @@ EXCLUDE: National chains, 1300/1800 numbers, luxury car rental.
 
 ${jsonFormat}`,
 
-      'cabinet-maker': `Search for exactly ${count} small owner-operated cabinet making and joinery businesses in Sydney Australia matching: "${query}".
+      'cabinet-maker': `Search for up to ${count} small owner-operated cabinet making and joinery businesses in Sydney Australia matching: "${query}".
 
 TARGET — all must be true:
 - Custom kitchen, cabinet or joinery maker (NOT IKEA, Freedom, Harvey Norman)
@@ -75,7 +78,7 @@ EXCLUDE: Flat-pack retailers, 1300/1800 numbers, national chains.
 
 ${jsonFormat}`,
 
-      'warehouse': `Search for exactly ${count} small owner-operated warehouse and logistics businesses in Sydney Australia matching: "${query}".
+      'warehouse': `Search for up to ${count} small owner-operated warehouse and logistics businesses in Sydney Australia matching: "${query}".
 
 TARGET — all must be true:
 - Family-owned, founder-led warehousing, distribution or 3PL

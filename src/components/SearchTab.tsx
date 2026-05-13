@@ -93,9 +93,9 @@ export default function SearchTab() {
     setResults([]);
     setAddedIds(new Set());
     setAddedNames(new Set());
-    setLog("Searching with Gemini...");
+    setLog("Searching on internet...");
     try {
-      const { leads } = await api.gemini.search(q, leadCount);
+      const { leads } = await api.gemini.search(q, leadCount, industry);
       setResults(leads);
       setLog(`Found ${leads.length} businesses`);
     } catch (e: unknown) {
